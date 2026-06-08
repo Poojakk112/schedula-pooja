@@ -12,12 +12,12 @@ export class AuthService {
 
   async signup(name: string, email: string, password: string, role: Role) {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = this.usersService.create(name, email, hashedPassword, role);
+    const user = await this.usersService.create(name, email, hashedPassword, role); // 👈 added await
     return { message: 'User created successfully', userId: user.id };
   }
 
   async login(email: string, password: string) {
-    const user = this.usersService.findByEmail(email);
+    const user = await this.usersService.findByEmail(email); // 👈 added await
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const isMatch = await bcrypt.compare(password, user.password);

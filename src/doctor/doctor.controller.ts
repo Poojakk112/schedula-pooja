@@ -1,20 +1,37 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { RolesGuard, Roles } from '../auth/roles.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { DoctorService } from './doctor.service';
 
-@ApiTags('Doctor')
 @Controller('doctor')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 export class DoctorController {
-  @Get('profile')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  constructor(private doctorService: DoctorService) {}
+
+  @Post('profile')
   @Roles('DOCTOR')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Doctor only route' })
-  getProfile(@Request() req: any) {
-    return {
-      message: 'Welcome Doctor!',
-      user: req.user,
-    };
+  createProfile(@Request() req, @Body() body) {
+    return this.doctorService.createProfile(req.user.userId, body);
+  }
+
+  @Get('profile')
+  @Roles('DOCTOR')
+  getProfile(@Request() req) {
+    return this.doctorService.getProfile(req.user.userId);
+  }
+
+  @Patch('profile')
+  @Roles('DOCTOR')
+  updateProfile(@Request() req, @Body() body) {
+    return this.doctorService.updateProfile(req.user.userId, body);
   }
 }
