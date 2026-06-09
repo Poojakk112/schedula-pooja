@@ -30,6 +30,9 @@ export class DoctorProfile {
   @Column()
   availabilityHours: string;
 
+  @Column({ default: true })
+  availability: boolean;
+
   @OneToOne(() => User, (user) => user.doctorProfile)
   @JoinColumn()
   user: User;
