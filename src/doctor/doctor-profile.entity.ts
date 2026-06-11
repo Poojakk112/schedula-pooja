@@ -13,30 +13,18 @@ export class DoctorProfile {
   id: number;
 
   @Column()
-  fullName: string;
+  userId: number;
 
-  @Column()
-  specialization: string;
-
-  @Column()
-  experience: string;
-
-  @Column()
-  qualification: string;
-
-  @Column({ type: 'decimal' })
-  consultationFee: number;
-
-  @Column()
-  availabilityHours: string;
-
-  @Column({ default: true })
-  availability: boolean;
-
-  @OneToOne(() => User, (user) => user.doctorProfile)
-  @JoinColumn()
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column()
-  userId: number;
+  @Column({ nullable: true })
+  specialization: string;
+
+  @Column({ nullable: true })
+  experience: string;
+
+  @Column({ nullable: true })
+  phone: string;
 }
