@@ -7,10 +7,20 @@ import { RecurringAvailability } from './recurring-availability.entity';
 import { CustomAvailability } from './custom-availability.entity';
 import { AvailabilityService } from './availability.service';
 import { AvailabilityController } from './availability.controller';
+import { Slot } from './slot.entity';
+import { SlotService } from './slot.service';
+import { SlotController } from './slot.controller';
+import { User } from '../users/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DoctorProfile, RecurringAvailability, CustomAvailability])],
-  controllers: [DoctorController, AvailabilityController],
-  providers: [DoctorService, AvailabilityService],
+  imports: [TypeOrmModule.forFeature([
+    DoctorProfile,
+    RecurringAvailability,
+    CustomAvailability,
+    Slot,
+    User,
+  ])],
+  controllers: [DoctorController, AvailabilityController, SlotController],
+  providers: [DoctorService, AvailabilityService, SlotService],
 })
 export class DoctorModule {}
