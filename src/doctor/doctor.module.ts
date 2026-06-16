@@ -11,6 +11,7 @@ import { Slot } from './slot.entity';
 import { SlotService } from './slot.service';
 import { SlotController } from './slot.controller';
 import { User } from '../users/user.entity';
+import { Appointment } from '../appointment/appointment.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([
@@ -19,6 +20,7 @@ import { User } from '../users/user.entity';
     CustomAvailability,
     Slot,
     User,
+    Appointment,
   ])],
   controllers: [DoctorController, AvailabilityController, SlotController],
   providers: [DoctorService, AvailabilityService, SlotService],
