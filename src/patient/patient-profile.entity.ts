@@ -20,6 +20,21 @@ export class PatientProfile {
   user: User;
 
   @Column({ nullable: true })
+  fullName: string;
+
+  @Column({ nullable: true })
+  age: number;
+
+  @Column({ nullable: true })
+  gender: string;
+
+  @Column({ nullable: true })
+  contactDetails: string;
+
+  @Column({ nullable: true })
+  healthInformation: string;
+
+  @Column({ nullable: true })
   phone: string;
 
   @Column({ nullable: true })

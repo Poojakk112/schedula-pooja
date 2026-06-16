@@ -20,10 +20,22 @@ export class DoctorProfile {
   user: User;
 
   @Column({ nullable: true })
+  fullName: string;
+
+  @Column({ nullable: true })
   specialization: string;
 
   @Column({ nullable: true })
   experience: string;
+
+  @Column({ nullable: true })
+  qualification: string;
+
+  @Column({ type: 'decimal', nullable: true })
+  consultationFee: number;
+
+  @Column({ nullable: true })
+  availabilityHours: string;
 
   @Column({ nullable: true })
   phone: string;
