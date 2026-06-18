@@ -1,0 +1,194 @@
+{
+  "info": {
+    "name": "Schedula API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Dr. Pooja\", \"email\": \"pooja.doctor@gmail.com\", \"password\": \"password123\", \"role\": \"DOCTOR\"}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"pooja.doctor@gmail.com\", \"password\": \"password123\"}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doctor Availability",
+      "item": [
+        {
+          "name": "Create Recurring Availability",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/doctor/availability",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"dayOfWeek\": \"MONDAY\", \"startTime\": \"10:00\", \"endTime\": \"13:00\"}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "Get Recurring Availability",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/doctor/availability",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]
+          }
+        },
+        {
+          "name": "Update Availability",
+          "request": {
+            "method": "PATCH",
+            "url": "http://localhost:3000/doctor/availability/1",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"startTime\": \"09:00\", \"endTime\": \"12:00\"}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "Delete Availability",
+          "request": {
+            "method": "DELETE",
+            "url": "http://localhost:3000/doctor/availability/1",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]
+          }
+        },
+        {
+          "name": "Create Override",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/doctor/availability/override",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"date\": \"2026-06-22\", \"startTime\": \"14:00\", \"endTime\": \"16:00\"}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "Get Availability by Date",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/doctor/availability/date?date=2026-06-22",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Scheduling",
+      "item": [
+        {
+          "name": "Set Scheduling Config",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/doctor/scheduling-config",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"schedulingType\": \"STREAM\", \"slotDuration\": 15, \"bufferTime\": 5}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "Get Scheduling Config",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/doctor/scheduling-config",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]
+          }
+        },
+        {
+          "name": "Get Patient Slots",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/patient/slots?doctorId=5&date=2026-06-24",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Book Appointment",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/appointment",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"doctorId\": 5, \"date\": \"2026-07-01\", \"startTime\": \"09:00\", \"endTime\": \"09:20\"}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        },
+        {
+          "name": "Get My Appointments",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/appointment/my",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]
+          }
+        },
+        {
+          "name": "Get Doctor Appointments",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/appointment/doctor",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]
+          }
+        },
+        {
+          "name": "Cancel Appointment",
+          "request": {
+            "method": "PATCH",
+            "url": "http://localhost:3000/appointment/1/cancel",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}]
+          }
+        },
+        {
+          "name": "Reschedule Appointment",
+          "request": {
+            "method": "PATCH",
+            "url": "http://localhost:3000/appointment/1/reschedule",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"date\": \"2026-07-08\", \"startTime\": \"09:00\", \"endTime\": \"09:20\"}",
+              "options": {"raw": {"language": "json"}}
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
