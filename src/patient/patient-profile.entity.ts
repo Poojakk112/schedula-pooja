@@ -13,24 +13,18 @@ export class PatientProfile {
   id: number;
 
   @Column()
-  fullName: string;
+  userId: number;
 
-  @Column()
-  age: number;
-
-  @Column()
-  gender: string;
-
-  @Column()
-  contactDetails: string;
-
-  @Column({ nullable: true })
-  healthInformation: string;
-
-  @OneToOne(() => User, (user) => user.patientProfile)
-  @JoinColumn()
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column()
-  userId: number;
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ nullable: true })
+  address: string;
+
+  @Column({ nullable: true })
+  dateOfBirth: string;
 }
