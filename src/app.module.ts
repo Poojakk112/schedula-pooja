@@ -13,14 +13,13 @@ import { PatientModule } from './patient/patient.module';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5433,
-      username: 'postgres',
-      password: 'postgres123',
-      database: 'schedula',
+      url: process.env.DATABASE_URL,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
       synchronize: false,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     }),
     AuthModule,
     UsersModule,
