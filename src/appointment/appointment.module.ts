@@ -1,12 +1,21 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppointmentController } from './appointment.controller';
-import { AppointmentService } from './appointment.service';
 import { Appointment } from './appointment.entity';
-import { User } from '../users/user.entity';
+import { AppointmentService } from './appointment.service';
+import { AppointmentController } from './appointment.controller';
+import { SchedulingConfig } from '../scheduling/scheduling.entity';
+import { RecurringAvailability } from '../doctor/recurring-availability.entity';
+import { CustomAvailability } from '../doctor/custom-availability.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Appointment, User])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Appointment,
+      SchedulingConfig,
+      RecurringAvailability,
+      CustomAvailability,
+    ]),
+  ],
   controllers: [AppointmentController],
   providers: [AppointmentService],
 })

@@ -1,7 +1,7 @@
 import {
   Controller,
-  Post,
   Get,
+  Post,
   Patch,
   Body,
   Param,
@@ -21,14 +21,31 @@ export class AppointmentController {
 
   @Post()
   @Roles('PATIENT')
-  bookAppointment(@Request() req, @Body() body) {
-    return this.appointmentService.bookAppointment(req.user.userId, body);
+  bookAppointment(
+    @Request() req,
+    @Body('doctorId') doctorId: number,
+    @Body('date') date: string,
+    @Body('startTime') startTime: string,
+    @Body('endTime') endTime: string,
+  ) {
+    return this.appointmentService.bookAppointment(req.user.userId, {
+      doctorId,
+      date,
+      startTime,
+      endTime,
+    });
   }
 
   @Get('my')
   @Roles('PATIENT')
   getMyAppointments(@Request() req) {
     return this.appointmentService.getPatientAppointments(req.user.userId);
+  }
+
+  @Get('doctor')
+  @Roles('DOCTOR')
+  getDoctorAppointments(@Request() req) {
+    return this.appointmentService.getDoctorAppointments(req.user.userId);
   }
 
   @Patch(':id/cancel')
@@ -38,5 +55,21 @@ export class AppointmentController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.appointmentService.cancelAppointment(req.user.userId, id);
+  }
+
+  @Patch(':id/reschedule')
+  @Roles('PATIENT')
+  rescheduleAppointment(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+    @Body('date') date: string,
+    @Body('startTime') startTime: string,
+    @Body('endTime') endTime: string,
+  ) {
+    return this.appointmentService.rescheduleAppointment(req.user.userId, id, {
+      date,
+      startTime,
+      endTime,
+    });
   }
 }
