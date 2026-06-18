@@ -6,59 +6,16 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-<<<<<<< HEAD
-import { Appointment, AppointmentStatus } from './appointment.entity';
-import { User } from '../users/user.entity';
-=======
 import { Appointment, AppointmentStatus, SchedulingType } from './appointment.entity';
 import { SchedulingConfig } from '../scheduling/scheduling.entity';
 import { RecurringAvailability } from '../doctor/recurring-availability.entity';
 import { CustomAvailability } from '../doctor/custom-availability.entity';
->>>>>>> 23d114f (feat: add appointment rescheduling with 30min cutoff and next slot suggestion)
 
 @Injectable()
 export class AppointmentService {
   constructor(
     @InjectRepository(Appointment)
     private appointmentRepo: Repository<Appointment>,
-<<<<<<< HEAD
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
-  ) {}
-
-  async bookAppointment(
-    patientId: number,
-    data: {
-      doctorId: number;
-      date: string;
-      startTime: string;
-      endTime: string;
-    },
-  ) {
-    // Check doctor exists
-    const doctor = await this.userRepo.findOne({ where: { id: data.doctorId } });
-    if (!doctor) throw new NotFoundException('Doctor not found');
-
-    // Check future date
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const appointmentDate = new Date(data.date);
-    if (appointmentDate < today) {
-      throw new BadRequestException('Cannot book appointment for past date');
-    }
-
-    // Check future time if today
-    if (appointmentDate.toDateString() === new Date().toDateString()) {
-      const [h, m] = data.startTime.split(':').map(Number);
-      const slotTime = new Date();
-      slotTime.setHours(h, m, 0, 0);
-      if (slotTime <= new Date()) {
-        throw new BadRequestException('Cannot book appointment for past time');
-      }
-    }
-
-    // Check duplicate booking
-=======
     @InjectRepository(SchedulingConfig)
     private schedulingRepo: Repository<SchedulingConfig>,
     @InjectRepository(RecurringAvailability)
@@ -109,7 +66,6 @@ export class AppointmentService {
   }
 
   private async bookStreamAppointment(patientId: number, data: any, config: SchedulingConfig) {
->>>>>>> 23d114f (feat: add appointment rescheduling with 30min cutoff and next slot suggestion)
     const existing = await this.appointmentRepo.findOne({
       where: {
         doctorId: data.doctorId,
@@ -118,25 +74,16 @@ export class AppointmentService {
         status: AppointmentStatus.BOOKED,
       },
     });
-<<<<<<< HEAD
-    if (existing) throw new BadRequestException('Slot already booked');
-=======
 
     if (existing) {
       const suggestion = await this.suggestNextStreamSlot(data.doctorId, data.date, data.startTime, config);
-      return {
-        message: 'Slot already booked',
-        suggestion,
-      };
+      return { message: 'Slot already booked', suggestion };
     }
->>>>>>> 23d114f (feat: add appointment rescheduling with 30min cutoff and next slot suggestion)
 
     const appointment = this.appointmentRepo.create({
       ...data,
       patientId,
       status: AppointmentStatus.BOOKED,
-<<<<<<< HEAD
-=======
       schedulingType: SchedulingType.STREAM,
     });
 
@@ -155,63 +102,22 @@ export class AppointmentService {
 
     if (bookedCount >= config.maxPatients) {
       const suggestion = await this.suggestNextWaveSlot(data.doctorId, data.date, config);
-      return {
-        message: 'Wave is full',
-        suggestion,
-      };
+      return { message: 'Wave is full', suggestion };
     }
 
     const tokenNumber = bookedCount + 1;
-
     const appointment = this.appointmentRepo.create({
       ...data,
       patientId,
       status: AppointmentStatus.BOOKED,
       schedulingType: SchedulingType.WAVE,
       tokenNumber,
->>>>>>> 23d114f (feat: add appointment rescheduling with 30min cutoff and next slot suggestion)
     });
 
     return this.appointmentRepo.save(appointment);
   }
 
   async getPatientAppointments(patientId: number) {
-<<<<<<< HEAD
-    const appointments = await this.appointmentRepo.find({
-      where: { patientId },
-     relations: { doctor: true },
-      order: { date: 'ASC' },
-    });
-
-    if (appointments.length === 0) {
-      return { message: 'No appointments found', data: [] };
-    }
-
-    return appointments;
-  }
-
-  async cancelAppointment(patientId: number, appointmentId: number) {
-    const appointment = await this.appointmentRepo.findOne({
-      where: { id: appointmentId },
-    });
-
-    if (!appointment) throw new NotFoundException('Appointment not found');
-
-    if (appointment.patientId !== patientId) {
-      throw new ForbiddenException('You can only cancel your own appointments');
-    }
-
-    if (appointment.status === AppointmentStatus.CANCELLED) {
-      throw new BadRequestException('Appointment already cancelled');
-    }
-
-    // Check if past appointment
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const appointmentDate = new Date(appointment.date);
-    if (appointmentDate < today) {
-      throw new BadRequestException('Cannot cancel past appointment');
-=======
     return this.appointmentRepo.find({
       where: { patientId },
       relations: { doctor: true },
@@ -234,27 +140,11 @@ export class AppointmentService {
     }
     if (this.isWithin30Minutes(appointment.date, appointment.startTime)) {
       throw new BadRequestException('Cannot cancel appointment within 30 minutes of start time');
->>>>>>> 23d114f (feat: add appointment rescheduling with 30min cutoff and next slot suggestion)
     }
-
     appointment.status = AppointmentStatus.CANCELLED;
     return this.appointmentRepo.save(appointment);
   }
 
-<<<<<<< HEAD
-  async getDoctorAppointments(doctorId: number) {
-    const appointments = await this.appointmentRepo.find({
-      where: { doctorId },
-      relations: { patient: true },
-      order: { date: 'ASC' },
-    });
-
-    if (appointments.length === 0) {
-      return { message: 'No appointments found', data: [] };
-    }
-
-    return appointments;
-=======
   async rescheduleAppointment(patientId: number, id: number, data: {
     date: string;
     startTime: string;
@@ -266,15 +156,12 @@ export class AppointmentService {
     if (appointment.status === AppointmentStatus.CANCELLED) {
       throw new BadRequestException('Cannot reschedule cancelled appointment');
     }
-
     if (this.isWithin30Minutes(appointment.date, appointment.startTime)) {
       throw new BadRequestException('Cannot reschedule appointment within 30 minutes of start time');
     }
-
     if (appointment.date === data.date && appointment.startTime.substring(0, 5) === data.startTime) {
       throw new BadRequestException('New slot is same as current slot');
     }
-
     const newDateTime = new Date(`${data.date}T${data.startTime}`);
     if (newDateTime < new Date()) {
       throw new BadRequestException('Cannot reschedule to past time');
@@ -292,13 +179,9 @@ export class AppointmentService {
           status: AppointmentStatus.BOOKED,
         },
       });
-
       if (slotTaken) {
         const suggestion = await this.suggestNextStreamSlot(appointment.doctorId, data.date, data.startTime, config);
-        return {
-          message: 'Requested slot unavailable',
-          suggestion,
-        };
+        return { message: 'Requested slot unavailable', suggestion };
       }
     } else {
       const bookedCount = await this.appointmentRepo.count({
@@ -309,13 +192,9 @@ export class AppointmentService {
           schedulingType: SchedulingType.WAVE,
         },
       });
-
       if (bookedCount >= config.maxPatients) {
         const suggestion = await this.suggestNextWaveSlot(appointment.doctorId, data.date, config);
-        return {
-          message: 'Requested wave is full',
-          suggestion,
-        };
+        return { message: 'Requested wave is full', suggestion };
       }
     }
 
@@ -345,23 +224,14 @@ export class AppointmentService {
     while (current + config.slotDuration <= endTime) {
       const slotStart = this.minutesToTime(current);
       const slotEnd = this.minutesToTime(current + config.slotDuration);
-
       const taken = await this.appointmentRepo.findOne({
-        where: {
-          doctorId,
-          date,
-          startTime: slotStart,
-          status: AppointmentStatus.BOOKED,
-        },
+        where: { doctorId, date, startTime: slotStart, status: AppointmentStatus.BOOKED },
       });
-
       if (!taken) {
         return { date, startTime: slotStart, endTime: slotEnd, type: 'STREAM' };
       }
-
       current += config.slotDuration + (config.bufferTime || 0);
     }
-
     return { message: 'No more slots available for this date' };
   }
 
@@ -370,17 +240,11 @@ export class AppointmentService {
     for (let i = 1; i <= 7; i++) {
       nextDate.setDate(nextDate.getDate() + 1);
       const nextDateStr = nextDate.toISOString().split('T')[0];
-
       const availability = await this.getAvailabilityForDate(doctorId, nextDateStr);
       if (!availability) continue;
 
       const bookedCount = await this.appointmentRepo.count({
-        where: {
-          doctorId,
-          date: nextDateStr,
-          status: AppointmentStatus.BOOKED,
-          schedulingType: SchedulingType.WAVE,
-        },
+        where: { doctorId, date: nextDateStr, status: AppointmentStatus.BOOKED, schedulingType: SchedulingType.WAVE },
       });
 
       if (bookedCount < config.maxPatients) {
@@ -393,7 +257,6 @@ export class AppointmentService {
         };
       }
     }
-
     return { message: 'No available wave slots in next 7 days' };
   }
 
@@ -410,6 +273,5 @@ export class AppointmentService {
     });
 
     return recurring.length > 0 ? recurring[0] : null;
->>>>>>> 23d114f (feat: add appointment rescheduling with 30min cutoff and next slot suggestion)
   }
 }
