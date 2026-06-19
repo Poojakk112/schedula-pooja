@@ -6,6 +6,9 @@ import {
   Body,
   Request,
   UseGuards,
+  Query,
+  Param,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
@@ -34,7 +37,18 @@ export class DoctorController {
   }
 
   @Get('appointments')
-  getAppointments(@Request() req) {
-    return this.doctorService.getDoctorAppointments(req.user.userId);
+  getAppointments(
+    @Request() req,
+    @Query('date') date?: string,
+  ) {
+    return this.doctorService.getDoctorAppointments(req.user.userId, date);
+  }
+
+  @Patch('appointments/:id/cancel')
+  cancelAppointment(
+    @Request() req,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.doctorService.cancelAppointment(req.user.userId, id);
   }
 }
