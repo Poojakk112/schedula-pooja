@@ -8,16 +8,21 @@ import {
   Request,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { AppointmentService } from './appointment.service';
+import { NextAvailableService } from './next-available.service';
 
 @Controller('appointment')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class AppointmentController {
-  constructor(private appointmentService: AppointmentService) {}
+  constructor(
+    private appointmentService: AppointmentService,
+    private nextAvailableService: NextAvailableService,
+  ) {}
 
   @Post()
   @Roles('PATIENT')
@@ -71,5 +76,11 @@ export class AppointmentController {
       startTime,
       endTime,
     });
+  }
+
+  @Get('next-available')
+  @Roles('PATIENT')
+  getNextAvailable(@Query('doctorId') doctorId: number) {
+    return this.nextAvailableService.findNextAvailable(doctorId);
   }
 }
