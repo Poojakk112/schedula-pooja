@@ -10,6 +10,8 @@ import { Appointment, AppointmentStatus, SchedulingType } from './appointment.en
 import { SchedulingConfig } from '../scheduling/scheduling.entity';
 import { RecurringAvailability } from '../doctor/recurring-availability.entity';
 import { CustomAvailability } from '../doctor/custom-availability.entity';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationType } from '../notification/notification.entity';
 
 @Injectable()
 export class AppointmentService {
@@ -22,6 +24,7 @@ export class AppointmentService {
     private recurringRepo: Repository<RecurringAvailability>,
     @InjectRepository(CustomAvailability)
     private customRepo: Repository<CustomAvailability>,
+    private notificationService: NotificationService,
   ) {}
 
   private isWithin30Minutes(date: string, startTime: string): boolean {
@@ -87,7 +90,16 @@ export class AppointmentService {
       schedulingType: SchedulingType.STREAM,
     });
 
-    return this.appointmentRepo.save(appointment);
+    const saved = await this.appointmentRepo.save(appointment);
+
+    await this.notificationService.createNotification(
+      patientId,
+      'Appointment Booked',
+      `Your appointment has been booked successfully for ${data.date} at ${data.startTime}`,
+      NotificationType.APPOINTMENT_BOOKED,
+    );
+
+    return saved;
   }
 
   private async bookWaveAppointment(patientId: number, data: any, config: SchedulingConfig) {
@@ -114,7 +126,16 @@ export class AppointmentService {
       tokenNumber,
     });
 
-    return this.appointmentRepo.save(appointment);
+    const saved = await this.appointmentRepo.save(appointment);
+
+    await this.notificationService.createNotification(
+      patientId,
+      'Appointment Booked',
+      `Your appointment has been booked successfully for ${data.date}. Token Number: ${tokenNumber}`,
+      NotificationType.APPOINTMENT_BOOKED,
+    );
+
+    return saved;
   }
 
   async getPatientAppointments(patientId: number) {
@@ -142,7 +163,16 @@ export class AppointmentService {
       throw new BadRequestException('Cannot cancel appointment within 30 minutes of start time');
     }
     appointment.status = AppointmentStatus.CANCELLED;
-    return this.appointmentRepo.save(appointment);
+    const saved = await this.appointmentRepo.save(appointment);
+
+    await this.notificationService.createNotification(
+      patientId,
+      'Appointment Cancelled',
+      `Your appointment scheduled on ${appointment.date} at ${appointment.startTime} has been cancelled`,
+      NotificationType.APPOINTMENT_CANCELLED,
+    );
+
+    return saved;
   }
 
   async rescheduleAppointment(patientId: number, id: number, data: {
@@ -211,7 +241,16 @@ export class AppointmentService {
       schedulingType: config.schedulingType as unknown as SchedulingType,
     });
 
-    return this.appointmentRepo.save(newAppointment);
+    const saved = await this.appointmentRepo.save(newAppointment);
+
+    await this.notificationService.createNotification(
+      patientId,
+      'Appointment Rescheduled',
+      `Your appointment has been rescheduled to ${data.date} at ${data.startTime}`,
+      NotificationType.APPOINTMENT_RESCHEDULED,
+    );
+
+    return saved;
   }
 
   private async suggestNextStreamSlot(doctorId: number, date: string, startTime: string, config: SchedulingConfig) {
