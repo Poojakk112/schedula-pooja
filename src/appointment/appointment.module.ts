@@ -7,6 +7,7 @@ import { NextAvailableService } from './next-available.service';
 import { SchedulingConfig } from '../scheduling/scheduling.entity';
 import { RecurringAvailability } from '../doctor/recurring-availability.entity';
 import { CustomAvailability } from '../doctor/custom-availability.entity';
+import { NotificationModule } from '../notification/notification.module';
 import { User } from '../users/user.entity';
 
 @Module({
@@ -18,6 +19,7 @@ import { User } from '../users/user.entity';
       CustomAvailability,
       User,
     ]),
+    NotificationModule,
   ],
   controllers: [AppointmentController],
   providers: [AppointmentService, NextAvailableService],
