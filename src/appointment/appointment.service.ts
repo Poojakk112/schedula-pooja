@@ -92,12 +92,12 @@ export class AppointmentService {
 
     const saved = await this.appointmentRepo.save(appointment);
 
-    await this.notificationService.createNotification(
-      patientId,
-      'Appointment Booked',
-      `Your appointment has been booked successfully for ${data.date} at ${data.startTime}`,
-      NotificationType.APPOINTMENT_BOOKED,
-    );
+   await this.notificationService.createNotification(
+  patientId,
+  'Appointment Booked',
+  `Your appointment has been booked successfully for ${data.date} at ${data.startTime}`,
+  NotificationType.APPOINTMENT_BOOKED,
+);
 
     return saved;
   }
@@ -129,11 +129,11 @@ export class AppointmentService {
     const saved = await this.appointmentRepo.save(appointment);
 
     await this.notificationService.createNotification(
-      patientId,
-      'Appointment Booked',
-      `Your appointment has been booked successfully for ${data.date}. Token Number: ${tokenNumber}`,
-      NotificationType.APPOINTMENT_BOOKED,
-    );
+  patientId,
+  'Appointment Booked',
+  `Your appointment has been booked successfully for ${data.date}. Token Number: ${tokenNumber}`,
+  NotificationType.APPOINTMENT_BOOKED,
+);
 
     return saved;
   }
@@ -166,11 +166,11 @@ export class AppointmentService {
     const saved = await this.appointmentRepo.save(appointment);
 
     await this.notificationService.createNotification(
-      patientId,
-      'Appointment Cancelled',
-      `Your appointment scheduled on ${appointment.date} at ${appointment.startTime} has been cancelled`,
-      NotificationType.APPOINTMENT_CANCELLED,
-    );
+  patientId,
+  'Appointment Cancelled',
+  `Your appointment scheduled on ${appointment.date} at ${appointment.startTime} has been cancelled`,
+  NotificationType.APPOINTMENT_CANCELLED,
+);
 
     return saved;
   }
