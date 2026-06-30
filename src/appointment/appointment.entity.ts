@@ -56,6 +56,9 @@ export class Appointment {
   @Column({ nullable: true })
   tokenNumber: number;
 
+  @Column({ nullable: true })
+  reportingTime: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }
