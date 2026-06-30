@@ -9,6 +9,7 @@ import { PatientModule } from './patient/patient.module';
 import { AppointmentModule } from './appointment/appointment.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { RemindersModule } from './reminders/reminders.module'; 
+import { NotificationModule } from './notification/notification.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(), 
@@ -37,6 +38,7 @@ import { RemindersModule } from './reminders/reminders.module';
     AppointmentModule,
     SchedulingModule,
     RemindersModule, 
+    NotificationModule,
   ],
 })
 export class AppModule {}
