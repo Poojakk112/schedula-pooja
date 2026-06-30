@@ -170,6 +170,8 @@ export class NextAvailableService {
       }
     }
 
+
+    // Search next 30 days
     for (let i = 1; i <= 30; i++) {
       const nextDate = new Date(today);
       nextDate.setDate(today.getDate() + i);
