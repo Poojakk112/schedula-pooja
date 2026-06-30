@@ -53,8 +53,23 @@ export class AppointmentService {
     startTime: string;
     endTime: string;
   }) {
+    // Validate date format first
+    if (!data.date || isNaN(new Date(data.date).getTime())) {
+      throw new BadRequestException('Invalid date format');
+    }
+
     const config = await this.schedulingRepo.findOne({ where: { doctorId: data.doctorId } });
     if (!config) throw new NotFoundException('Doctor scheduling config not found');
+
+    // Booking Window (Iteration 1): only TODAY is allowed
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    if (data.date < todayStr) {
+      throw new BadRequestException('Cannot book appointment for a past date');
+    }
+    if (data.date > todayStr) {
+      throw new BadRequestException('Bookings are only allowed for today. Future date booking is not yet supported.');
+    }
 
     const appointmentDate = new Date(`${data.date}T${data.startTime}`);
     if (appointmentDate < new Date()) {
