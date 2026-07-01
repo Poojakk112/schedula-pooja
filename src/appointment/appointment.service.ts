@@ -53,17 +53,17 @@ export class AppointmentService {
     startTime: string;
     endTime: string;
   }) {
-    // Validate date format first
+    // 1. Validate date format
     if (!data.date || isNaN(new Date(data.date).getTime())) {
       throw new BadRequestException('Invalid date format');
     }
 
+    // 2. Check doctor exists
     const config = await this.schedulingRepo.findOne({ where: { doctorId: data.doctorId } });
     if (!config) throw new NotFoundException('Doctor scheduling config not found');
 
-    // Booking Window (Iteration 1): only TODAY is allowed
+    // 3. Today-only check (Day 18)
     const todayStr = new Date().toISOString().split('T')[0];
-
     if (data.date < todayStr) {
       throw new BadRequestException('Cannot book appointment for a past date');
     }
@@ -71,6 +71,38 @@ export class AppointmentService {
       throw new BadRequestException('Bookings are only allowed for today. Future date booking is not yet supported.');
     }
 
+    // 4. Doctor availability check
+    const availability = await this.getAvailabilityForDate(data.doctorId, data.date);
+    if (!availability) {
+      throw new BadRequestException('Doctor is unavailable today');
+    }
+
+    const consultStartMins = this.timeToMinutes(availability.startTime.substring(0, 5));
+    const consultEndMins = this.timeToMinutes(availability.endTime.substring(0, 5));
+
+    if (isNaN(consultStartMins) || isNaN(consultEndMins) || consultEndMins <= consultStartMins) {
+      throw new BadRequestException('Invalid doctor consultation timings');
+    }
+
+    // 5. Booking window check (Day 19) — BEFORE past-time check
+    const windowOpenMins = consultStartMins - 120; // 2 hours before start
+    const windowCloseMins = consultEndMins - 60;   // 1 hour before end
+
+    const now = new Date();
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+
+    if (nowMins < windowOpenMins) {
+      throw new BadRequestException(
+        `Booking window has not opened yet. Booking opens at ${this.minutesToTime(windowOpenMins)}`,
+      );
+    }
+    if (nowMins >= windowCloseMins) {
+      throw new BadRequestException(
+        `Booking window has closed. Booking closed at ${this.minutesToTime(windowCloseMins)}`,
+      );
+    }
+
+    // 6. Past time-of-day check
     const appointmentDate = new Date(`${data.date}T${data.startTime}`);
     if (appointmentDate < new Date()) {
       throw new BadRequestException('Cannot book appointment in the past');
@@ -107,12 +139,12 @@ export class AppointmentService {
 
     const saved = await this.appointmentRepo.save(appointment);
 
-   await this.notificationService.createNotification(
-  patientId,
-  'Appointment Booked',
-  `Your appointment has been booked successfully for ${data.date} at ${data.startTime}`,
-  NotificationType.APPOINTMENT_BOOKED,
-);
+    await this.notificationService.createNotification(
+      patientId,
+      'Appointment Booked',
+      `Your appointment has been booked successfully for ${data.date} at ${data.startTime}`,
+      NotificationType.APPOINTMENT_BOOKED,
+    );
 
     return saved;
   }
@@ -144,11 +176,11 @@ export class AppointmentService {
     const saved = await this.appointmentRepo.save(appointment);
 
     await this.notificationService.createNotification(
-  patientId,
-  'Appointment Booked',
-  `Your appointment has been booked successfully for ${data.date}. Token Number: ${tokenNumber}`,
-  NotificationType.APPOINTMENT_BOOKED,
-);
+      patientId,
+      'Appointment Booked',
+      `Your appointment has been booked successfully for ${data.date}. Token Number: ${tokenNumber}`,
+      NotificationType.APPOINTMENT_BOOKED,
+    );
 
     return saved;
   }
@@ -181,11 +213,11 @@ export class AppointmentService {
     const saved = await this.appointmentRepo.save(appointment);
 
     await this.notificationService.createNotification(
-  patientId,
-  'Appointment Cancelled',
-  `Your appointment scheduled on ${appointment.date} at ${appointment.startTime} has been cancelled`,
-  NotificationType.APPOINTMENT_CANCELLED,
-);
+      patientId,
+      'Appointment Cancelled',
+      `Your appointment scheduled on ${appointment.date} at ${appointment.startTime} has been cancelled`,
+      NotificationType.APPOINTMENT_CANCELLED,
+    );
 
     return saved;
   }
