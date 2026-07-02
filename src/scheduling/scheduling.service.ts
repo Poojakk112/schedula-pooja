@@ -25,6 +25,8 @@ export class SchedulingService {
     slotDuration?: number;
     bufferTime?: number;
     maxPatients?: number;
+    allowFutureBooking?: boolean;
+    maxFutureBookingDays?: number | null;
   }) {
     if (data.schedulingType === SchedulingType.STREAM) {
       if (!data.slotDuration || data.slotDuration <= 0) {
@@ -44,9 +46,24 @@ export class SchedulingService {
     let config = await this.schedulingRepo.findOne({ where: { doctorId } });
 
     if (config) {
-      Object.assign(config, data);
+      config.schedulingType = data.schedulingType;
+      if (data.slotDuration !== undefined) config.slotDuration = data.slotDuration;
+      if (data.bufferTime !== undefined) config.bufferTime = data.bufferTime;
+      if (data.maxPatients !== undefined) config.maxPatients = data.maxPatients;
+      if (data.allowFutureBooking !== undefined) config.allowFutureBooking = data.allowFutureBooking;
+      if ('maxFutureBookingDays' in data) {
+        config.maxFutureBookingDays = data.maxFutureBookingDays ?? null;
+      }
     } else {
-      config = this.schedulingRepo.create({ ...data, doctorId });
+      config = this.schedulingRepo.create({
+        doctorId,
+        schedulingType: data.schedulingType,
+        slotDuration: data.slotDuration,
+        bufferTime: data.bufferTime,
+        maxPatients: data.maxPatients,
+        allowFutureBooking: data.allowFutureBooking ?? false,
+        maxFutureBookingDays: data.maxFutureBookingDays ?? null,
+      } as SchedulingConfig);
     }
 
     return this.schedulingRepo.save(config);
@@ -108,12 +125,7 @@ export class SchedulingService {
     while (current + slotDuration <= end) {
       const slotStart = this.minutesToTime(current);
       const slotEnd = this.minutesToTime(current + slotDuration);
-      slots.push({
-        date,
-        startTime: slotStart,
-        endTime: slotEnd,
-        type: 'STREAM',
-      });
+      slots.push({ date, startTime: slotStart, endTime: slotEnd, type: 'STREAM' });
       current += slotDuration + bufferTime;
     }
 
