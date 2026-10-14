@@ -14,6 +14,16 @@ Schedula is a backend system for managing doctor appointments, availability, and
 ## Live Server URL
 https://schedula-pooja.onrender.com
 
+## 🗂️ System Design
+
+**Database ER Diagram**
+
+![ER Diagram](docs/ER%20Diagram.png)
+
+**Appointment Booking Flow**
+
+![Appointment booking flow](appointment-booking-flow.drawio.png)
+
 ## Project Setup
 
 ### Installation
