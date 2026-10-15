@@ -53,27 +53,83 @@ export class AppointmentService {
     startTime: string;
     endTime: string;
   }) {
-    // Validate date format first
+    // 1. Validate date format
     if (!data.date || isNaN(new Date(data.date).getTime())) {
       throw new BadRequestException('Invalid date format');
     }
 
+    // 2. Check doctor scheduling config exists
     const config = await this.schedulingRepo.findOne({ where: { doctorId: data.doctorId } });
     if (!config) throw new NotFoundException('Doctor scheduling config not found');
 
-    // Booking Window (Iteration 1): only TODAY is allowed
+    // 3. Date validation based on doctor's future booking config
     const todayStr = new Date().toISOString().split('T')[0];
 
     if (data.date < todayStr) {
       throw new BadRequestException('Cannot book appointment for a past date');
     }
+
     if (data.date > todayStr) {
-      throw new BadRequestException('Bookings are only allowed for today. Future date booking is not yet supported.');
+      if (!config.allowFutureBooking) {
+        throw new BadRequestException('This doctor only accepts same-day bookings');
+      }
+
+      const maxDays = config.maxFutureBookingDays ?? 7;
+
+      if (maxDays <= 0) {
+        throw new BadRequestException('Invalid future booking configuration');
+      }
+
+      const maxDate = new Date();
+      maxDate.setDate(maxDate.getDate() + maxDays);
+      const maxDateStr = maxDate.toISOString().split('T')[0];
+
+      if (data.date > maxDateStr) {
+        throw new BadRequestException(
+          `Booking allowed only up to ${maxDays} days in advance. Latest allowed date: ${maxDateStr}`
+        );
+      }
     }
 
-    const appointmentDate = new Date(`${data.date}T${data.startTime}`);
-    if (appointmentDate < new Date()) {
-      throw new BadRequestException('Cannot book appointment in the past');
+    // 4. Doctor availability check
+    const availability = await this.getAvailabilityForDate(data.doctorId, data.date);
+    if (!availability) {
+      throw new BadRequestException('Doctor is unavailable on the selected date');
+    }
+
+    const consultStartMins = this.timeToMinutes(availability.startTime.substring(0, 5));
+    const consultEndMins = this.timeToMinutes(availability.endTime.substring(0, 5));
+
+    if (isNaN(consultStartMins) || isNaN(consultEndMins) || consultEndMins <= consultStartMins) {
+      throw new BadRequestException('Invalid doctor consultation timings');
+    }
+
+    // 5. Booking window check (only for today)
+    if (data.date === todayStr) {
+      const windowOpenMins = consultStartMins - 120;
+      const windowCloseMins = consultEndMins - 60;
+
+      const now = new Date();
+      const nowMins = now.getHours() * 60 + now.getMinutes();
+
+      if (nowMins < windowOpenMins) {
+        throw new BadRequestException(
+          `Booking window has not opened yet. Booking opens at ${this.minutesToTime(windowOpenMins)}`,
+        );
+      }
+      if (nowMins >= windowCloseMins) {
+        throw new BadRequestException(
+          `Booking window has closed. Booking closed at ${this.minutesToTime(windowCloseMins)}`,
+        );
+      }
+    }
+
+    // 6. Past time-of-day check (only for today)
+    if (data.date === todayStr) {
+      const appointmentDate = new Date(`${data.date}T${data.startTime}`);
+      if (appointmentDate < new Date()) {
+        throw new BadRequestException('Cannot book appointment in the past');
+      }
     }
 
     if (config.schedulingType === SchedulingType.STREAM) {
@@ -107,12 +163,12 @@ export class AppointmentService {
 
     const saved = await this.appointmentRepo.save(appointment);
 
-   await this.notificationService.createNotification(
-  patientId,
-  'Appointment Booked',
-  `Your appointment has been booked successfully for ${data.date} at ${data.startTime}`,
-  NotificationType.APPOINTMENT_BOOKED,
-);
+    await this.notificationService.createNotification(
+      patientId,
+      'Appointment Booked',
+      `Your appointment has been booked successfully for ${data.date} at ${data.startTime}`,
+      NotificationType.APPOINTMENT_BOOKED,
+    );
 
     return saved;
   }
@@ -144,11 +200,11 @@ export class AppointmentService {
     const saved = await this.appointmentRepo.save(appointment);
 
     await this.notificationService.createNotification(
-  patientId,
-  'Appointment Booked',
-  `Your appointment has been booked successfully for ${data.date}. Token Number: ${tokenNumber}`,
-  NotificationType.APPOINTMENT_BOOKED,
-);
+      patientId,
+      'Appointment Booked',
+      `Your appointment has been booked successfully for ${data.date}. Token Number: ${tokenNumber}`,
+      NotificationType.APPOINTMENT_BOOKED,
+    );
 
     return saved;
   }
@@ -181,11 +237,11 @@ export class AppointmentService {
     const saved = await this.appointmentRepo.save(appointment);
 
     await this.notificationService.createNotification(
-  patientId,
-  'Appointment Cancelled',
-  `Your appointment scheduled on ${appointment.date} at ${appointment.startTime} has been cancelled`,
-  NotificationType.APPOINTMENT_CANCELLED,
-);
+      patientId,
+      'Appointment Cancelled',
+      `Your appointment scheduled on ${appointment.date} at ${appointment.startTime} has been cancelled`,
+      NotificationType.APPOINTMENT_CANCELLED,
+    );
 
     return saved;
   }
@@ -318,7 +374,8 @@ export class AppointmentService {
     const custom = await this.customRepo.findOne({ where: { doctorId, date } });
     if (custom) return custom;
 
-    const dayOfWeek = new Date(date)
+    const [year, month, day] = date.split('-').map(Number);
+    const dayOfWeek = new Date(year, month - 1, day)
       .toLocaleDateString('en-US', { weekday: 'long' })
       .toUpperCase();
 

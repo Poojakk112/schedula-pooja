@@ -22,16 +22,17 @@ export class SchedulingController {
   @Roles('DOCTOR')
   setConfig(
     @Request() req,
-    @Body('schedulingType') schedulingType: SchedulingType,
-    @Body('slotDuration') slotDuration: number,
-    @Body('bufferTime') bufferTime: number,
-    @Body('maxPatients') maxPatients: number,
+    @Body() body: any,
   ) {
     return this.schedulingService.setSchedulingConfig(req.user.userId, {
-      schedulingType,
-      slotDuration,
-      bufferTime,
-      maxPatients,
+      schedulingType: body.schedulingType,
+      slotDuration: body.slotDuration,
+      bufferTime: body.bufferTime,
+      maxPatients: body.maxPatients,
+      allowFutureBooking: body.allowFutureBooking === true || body.allowFutureBooking === 'true',
+      maxFutureBookingDays: 'maxFutureBookingDays' in body
+        ? (body.maxFutureBookingDays === null ? null : Number(body.maxFutureBookingDays))
+        : undefined,
     });
   }
 
