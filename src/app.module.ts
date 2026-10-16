@@ -18,6 +18,7 @@ import { NotificationModule } from './notification/notification.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
+        url: configService.get<string>('DATABASE_URL')?.split('?')[0],
         host: configService.get('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
         username: configService.get('DB_USERNAME'),
